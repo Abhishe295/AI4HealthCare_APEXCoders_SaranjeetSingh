@@ -1,0 +1,12 @@
+numpy
+pandas
+scipy
+nibabel
+pydicom
+scikit-learn
+tqdm
+opencv-python
+fastapi
+uvicorn
+torch
+torchvision

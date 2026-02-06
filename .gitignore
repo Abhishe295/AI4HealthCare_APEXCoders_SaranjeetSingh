@@ -1,0 +1,17 @@
+# Data folders (never push)
+Model/data/original/
+Model/data/curated/nifti/
+
+
+# Large binaries
+*.nii
+*.nii.gz
+*.npy
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
