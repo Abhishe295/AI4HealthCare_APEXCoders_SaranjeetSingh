@@ -1,0 +1,6 @@
+Dataset split completed
+Random seed: 42
+  class  train  val  test
+0    CN     32    6     8
+1   MCI     54   11    13
+2    AD     23    5     6

@@ -1,0 +1,4 @@
+class,train,val,test
+CN,32,6,8
+MCI,54,11,13
+AD,23,5,6

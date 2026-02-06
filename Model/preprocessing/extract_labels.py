@@ -60,9 +60,13 @@ def main():
     # Reporting
     print("Labels extraction complete.")
     print("Total subjects:", len(labels_df))
-    print(labels_df["label"].value_counts())
-    print("Skipped subjects:", skipped)
-    print(f"Saved to: {OUTPUT_LABELS}")
+    if "label" in labels_df.columns:
+        print(labels_df["label"].value_counts())
+    else:
+        print("No labels extracted. Check filtering conditions.")
+
+        print("Skipped subjects:", skipped)
+        print(f"Saved to: {OUTPUT_LABELS}")
 
 if __name__ == "__main__":
     main()
