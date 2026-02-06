@@ -4,9 +4,7 @@ Model/data/curated/nifti/
 
 
 # Large binaries
-*.nii
-*.nii.gz
-*.npy
+
 
 # Python cache
 __pycache__/
