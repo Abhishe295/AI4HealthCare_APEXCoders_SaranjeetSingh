@@ -5,12 +5,12 @@ import pandas as pd
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-ALL_DIR = os.path.join(BASE_DIR, "data", "processed", "_all")
+ALL_DIR = os.path.join(BASE_DIR, "data", "processed", "_all_antspy")
 FINAL_DIR = os.path.join(BASE_DIR, "data", "processed")
 REPORT_DIR = os.path.join(FINAL_DIR, "reports")
 
 SPLITS = {
-    "train": 0.7,
+    "train": 0.70,
     "val": 0.15,
     "test": 0.15
 }
@@ -19,6 +19,13 @@ SEED = 42
 random.seed(SEED)
 
 os.makedirs(REPORT_DIR, exist_ok=True)
+
+def clear_old_splits():
+    for split in ["train", "val", "test"]:
+        split_dir = os.path.join(FINAL_DIR, split)
+        if os.path.exists(split_dir):
+            shutil.rmtree(split_dir)
+
 
 
 def ensure_dirs():
@@ -55,6 +62,7 @@ def move_files(files, label, split):
 
 
 def main():
+    clear_old_splits() 
     ensure_dirs()
 
     summary = []

@@ -15,8 +15,8 @@ MODEL_DIR = os.path.join(BASE_DIR, "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-EPOCHS = 10
-BATCH_SIZE = 8
+EPOCHS = 15
+BATCH_SIZE = 1
 LR = 1e-4
 
 # ---------------- DATASET ----------------
@@ -50,30 +50,39 @@ class MRIDataset(Dataset):
 class SimpleCNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Conv2d(1, 16, 3, padding=1),
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 32, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
 
-            nn.Conv2d(16, 32, 3, padding=1),
+            nn.Conv2d(32, 64, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
 
             nn.AdaptiveAvgPool2d(1)
         )
-        self.fc = nn.Linear(32, 1)
+        self.classifier = nn.Linear(64, 1)
 
     def forward(self, x):
-        x = self.net(x)
-        x = x.view(x.size(0), -1)
-        return self.fc(x)
+        # x: (num_slices, 1, H, W)
+        feats = self.features(x)          # (num_slices, 64, 1, 1)
+        feats = feats.view(feats.size(0), -1)  # (num_slices, 64)
+
+        subject_feat = feats.mean(dim=0)  # ✅ SUBJECT-LEVEL
+        logit = self.classifier(subject_feat)  # (1)
+
+        return logit
+
 
 # ---------------- TRAINING ----------------
 
 def train():
     model = SimpleCNN().to(DEVICE)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss(
+    pos_weight=torch.tensor([32/23]).to(DEVICE)
+)
+
 
     train_loader = DataLoader(MRIDataset("train"), batch_size=1, shuffle=True)
     val_loader = DataLoader(MRIDataset("val"), batch_size=1)
@@ -84,11 +93,9 @@ def train():
             slices = slices.squeeze(0).to(DEVICE)
             label = torch.tensor([label], dtype=torch.float32).to(DEVICE)
 
-            slice_logits = model(slices).squeeze(1)
-            topk = torch.topk(slice_logits, k=5).values
-            preds = topk.mean().view(1)
+            logit = model(slices)          # single logit
+            loss = criterion(logit.view(1), label)
 
-            loss = criterion(preds, label)
 
 
 

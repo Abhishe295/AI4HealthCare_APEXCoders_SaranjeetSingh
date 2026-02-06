@@ -14,36 +14,26 @@ TEST_DIR = os.path.join(BASE_DIR, "data", "processed", "test")
 class SimpleCNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Conv2d(1, 16, 3, padding=1),
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 32, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1),
+
+            nn.Conv2d(32, 64, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
+
             nn.AdaptiveAvgPool2d(1)
         )
-        self.fc = nn.Linear(32, 1)
+        self.classifier = nn.Linear(64, 1)
 
     def forward(self, x):
-        x = self.net(x)
-        x = x.view(x.size(0), -1)
-        return self.fc(x)
+        feats = self.features(x)                # (num_slices, 64, 1, 1)
+        feats = feats.view(feats.size(0), -1)   # (num_slices, 64)
+        subject_feat = feats.mean(dim=0)        # SUBJECT-LEVEL
+        return self.classifier(subject_feat)    # (1)
 
-# ---------------- HELPERS ----------------
-
-def aggregate_logits(model, volume):
-    slices = volume.transpose(2, 0, 1)
-    slices = torch.tensor(slices).float().unsqueeze(1).to(DEVICE)
-
-    with torch.no_grad():
-        slice_logits = model(slices).squeeze(1)
-        topk = torch.topk(slice_logits, k=10).values
-        logits = topk.mean()
-
-    return torch.sigmoid(logits).item()
-
-# ---------------- MAIN ----------------
+# ---------------- EVAL ----------------
 
 def evaluate_test_accuracy(model):
     y_true, y_pred = [], []
@@ -52,30 +42,44 @@ def evaluate_test_accuracy(model):
         folder = os.path.join(TEST_DIR, cls)
         for f in os.listdir(folder):
             volume = np.load(os.path.join(folder, f))
-            prob = aggregate_logits(model, volume)
-            pred = 1 if prob >= 0.5 else 0
 
+            mean = volume.mean()
+            std = volume.std() + 1e-6
+            volume = (volume - mean) / std
+
+            slices = volume.transpose(2, 0, 1)
+            slices = torch.tensor(slices).float().unsqueeze(1).to(DEVICE)
+
+            with torch.no_grad():
+                logit = model(slices)
+                prob = torch.sigmoid(logit).item()
+
+            pred = 1 if prob >= 0.5 else 0
             y_true.append(label)
             y_pred.append(pred)
 
     return accuracy_score(y_true, y_pred)
+
+# ---------------- MAIN ----------------
 
 def predict(npy_path):
     model = SimpleCNN().to(DEVICE)
     model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
     model.eval()
 
-    # ---- single prediction ----
     volume = np.load(npy_path)
-
     mean = volume.mean()
     std = volume.std() + 1e-6
     volume = (volume - mean) / std
 
-    prob = aggregate_logits(model, volume)
-    label = "AD" if prob >= 0.5 else "CN"
+    slices = volume.transpose(2, 0, 1)
+    slices = torch.tensor(slices).float().unsqueeze(1).to(DEVICE)
 
-    # ---- dataset accuracy ----
+    with torch.no_grad():
+        logit = model(slices)
+        prob = torch.sigmoid(logit).item()
+
+    label = "AD" if prob >= 0.5 else "CN"
     acc = evaluate_test_accuracy(model)
 
     print("\n--- Binary MRI Prediction ---")
@@ -87,4 +91,4 @@ if __name__ == "__main__":
     path = input("Enter path to .npy MRI file: ")
     predict(path)
 
-# data/processed/test/AD/136_S_0426.npy
+#data/processed/test/AD/136_S_0426.npy

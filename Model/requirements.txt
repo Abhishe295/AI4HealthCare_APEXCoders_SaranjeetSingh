@@ -11,4 +11,7 @@ uvicorn
 torch
 torchvision
 antspyx
+fastapi
+uvicorn
+python-multipart
 
