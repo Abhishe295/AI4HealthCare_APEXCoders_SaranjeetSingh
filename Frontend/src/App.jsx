@@ -12,13 +12,13 @@ function App() {
 
   return (
     <div className='relative h-full w-full' data-theme={theme}>
-      <DotGridBackground/>
-      <div className='relative z-10'>
+      {/* <DotGridBackground/> */}
+      {/* <div className='relative z-10'> */}
         <Routes>
           <Route path = '/' element = {<HomePage/>}/>
           <Route path = '/theme' element={<ThemePage/>}/>
         </Routes>
-      </div>
+      {/* </div> */}
     </div>
 
   )

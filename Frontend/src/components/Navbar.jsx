@@ -2,7 +2,7 @@ import { Palette } from "lucide-react";
 
 export default function Navbar() {
   return (
-    <div className="navbar bg-base-200 shadow-md px-6 border-b border-base-300 z-10">
+    <div className="navbar bg-base-200 shadow-md px-6 border-b border-base-300 z-100">
       <div className="flex-1">
         <a 
           href="/" 

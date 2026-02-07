@@ -1,6 +1,7 @@
 import Navbar from "../components/Navbar";
 import UploadCard from "../components/UploadCard";
 import Graph from "../components/Graph.jsx";
+import RobotHead from "../components/RobotHead.jsx";
 import { Brain, Activity, Zap, Shield } from "lucide-react";
 
 export default function HomePage() {
@@ -10,40 +11,48 @@ export default function HomePage() {
 
       <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
         {/* Hero Header */}
-        <div className="text-center space-y-6 animate-in fade-in duration-700">
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary via-secondary to-accent shadow-xl flex items-center justify-center animate-pulse">
-                <Brain className="w-12 h-12 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-success rounded-full flex items-center justify-center animate-bounce">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-            </div>
+        <div className="grid lg:grid-cols-2 gap-12 items-center animate-in fade-in duration-700">
+          {/* Left Side - Robot */}
+          <div className="flex justify-center lg:justify-end order-2 lg:order-1">
+            <RobotHead/>
           </div>
 
-          <div className="space-y-3">
-            <h1 className="text-5xl font-extrabold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent leading-tight">
-              AI-Powered Neurological Screening
-            </h1>
-            <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-              Upload T1-weighted MRI scans for instant AI-based analysis with state-of-the-art deep learning models
-            </p>
-          </div>
+          {/* Right Side - Content */}
+          <div className="space-y-6 text-center lg:text-left order-1 lg:order-2">
+            {/* <div className="flex justify-center lg:justify-start mb-4">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary via-secondary to-accent shadow-xl flex items-center justify-center animate-pulse">
+                  <Brain className="w-12 h-12 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-success rounded-full flex items-center justify-center animate-bounce">
+                  <Zap className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            </div> */}
 
-          {/* Feature Pills */}
-          <div className="flex flex-wrap justify-center gap-3 pt-4">
-            <div className="badge badge-lg gap-2 bg-primary/10 text-primary border-primary/20 px-4 py-3">
-              <Activity className="w-4 h-4" />
-              Real-time Analysis
+            <div className="space-y-3">
+              <h1 className="text-5xl font-extrabold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent leading-tight">
+                AI-Powered Neurological Screening
+              </h1>
+              <p className="text-lg text-base-content/70 lg:max-w-xl mx-auto lg:mx-0">
+                Upload T1-weighted MRI scans for instant AI-based analysis with state-of-the-art deep learning models
+              </p>
             </div>
-            <div className="badge badge-lg gap-2 bg-secondary/10 text-secondary border-secondary/20 px-4 py-3">
-              <Shield className="w-4 h-4" />
-              Medical-Grade AI
-            </div>
-            <div className="badge badge-lg gap-2 bg-accent/10 text-accent border-accent/20 px-4 py-3">
-              <Zap className="w-4 h-4" />
-              Instant Results
+
+            {/* Feature Pills */}
+            <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-4">
+              <div className="badge badge-lg gap-2 bg-primary/10 text-primary border-primary/20 px-4 py-3">
+                <Activity className="w-4 h-4" />
+                Real-time Analysis
+              </div>
+              <div className="badge badge-lg gap-2 bg-secondary/10 text-secondary border-secondary/20 px-4 py-3">
+                <Shield className="w-4 h-4" />
+                Medical-Grade AI
+              </div>
+              <div className="badge badge-lg gap-2 bg-accent/10 text-accent border-accent/20 px-4 py-3">
+                <Zap className="w-4 h-4" />
+                Instant Results
+              </div>
             </div>
           </div>
         </div>
