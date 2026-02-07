@@ -50,12 +50,14 @@ export default function Graph() {
 
       // Process binary predictions
       const binaryPredictions = history
-        .filter(h => h.task === "binary")
-        .map(h => ({
-          x: h.index,
-          y: h.confidence || 0,
-          label: `#${h.index}`,
-        }));
+  .filter(h => h.task === "binary")
+  .map((h, i) => ({
+    x: i + 1,                           // 🔥 frontend-safe index
+    y: Number(h.confidence ?? 0),
+    label: `#${i + 1}`,
+  }));
+
+
 
       // Process multiclass predictions
       const counts = { CN: 0, MCI: 0, AD: 0 };
@@ -224,15 +226,15 @@ export default function Graph() {
               <ResponsiveContainer width="100%" height={300}>
                 <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-base-300" />
-                  <XAxis 
-                    dataKey="x" 
-                    name="Prediction #" 
-                    type="number"
-                    domain={['dataMin', 'dataMax']}
-                    allowDecimals={false}
-                    label={{ value: 'Prediction Number', position: 'bottom', offset: 0 }}
-                    tick={{ fill: 'currentColor' }}
-                  />
+                  <XAxis
+  dataKey="x"
+  type="number"
+  domain={[0, 'dataMax + 1']}   // 🔥 critical fix
+  allowDecimals={false}
+  label={{ value: 'Prediction Number', position: 'bottom' }}
+  tick={{ fill: 'currentColor' }}
+/>
+
                   <YAxis 
                     domain={[0, 1]} 
                     name="Confidence"

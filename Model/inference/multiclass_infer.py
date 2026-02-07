@@ -8,13 +8,28 @@ CLASSES = ["CN", "MCI", "AD"]
 class SubjectCNN(nn.Module):
     def __init__(self):
         super().__init__()
-        # 🔥 MUST MATCH TRAINING
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(1, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(),
+
             nn.AdaptiveAvgPool2d(1)
         )
+
+        # 🔥 REQUIRED — because checkpoint has attn.*
+        self.attn = nn.Sequential(
+            nn.Linear(128, 64),
+            nn.Tanh(),
+            nn.Linear(64, 1)
+        )
+
         self.classifier = nn.Sequential(
             nn.Linear(128, 64),
             nn.ReLU(),
@@ -23,10 +38,15 @@ class SubjectCNN(nn.Module):
         )
 
     def forward(self, x):
-        f = self.encoder(x).view(x.size(0), -1)
-        k = max(5, f.shape[0] // 8)
-        subject_feat = torch.topk(f, k=k, dim=0).values.mean(dim=0)
+        feats = self.encoder(x).view(x.size(0), -1)   # (S,128)
+
+        attn_scores = self.attn(feats)                # (S,1)
+        attn_weights = torch.softmax(attn_scores, dim=0)
+
+        subject_feat = (feats * attn_weights).sum(dim=0)
+
         return self.classifier(subject_feat)
+
 
 def load_multiclass_model(path):
     model = SubjectCNN().to(DEVICE)
