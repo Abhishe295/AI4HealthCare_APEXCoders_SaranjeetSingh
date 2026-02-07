@@ -43,5 +43,11 @@ def predict_multiclass(model, volume):
 
     return {
         "label": CLASSES[int(probs.argmax())],
-        "probabilities": dict(zip(CLASSES, probs.round(4)))
+        "probabilities": {
+            "CN": float(round(probs[0], 4)),
+            "MCI": float(round(probs[1], 4)),
+            "AD": float(round(probs[2], 4)),
+        }
     }
+
+

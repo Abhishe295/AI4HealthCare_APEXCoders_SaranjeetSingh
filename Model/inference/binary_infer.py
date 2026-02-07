@@ -42,5 +42,6 @@ def predict_binary(model, volume):
 
     return {
         "label": "AD" if prob >= 0.5 else "CN",
-        "confidence": round(prob, 4)
+        "confidence": float(round(prob, 4))
     }
+
