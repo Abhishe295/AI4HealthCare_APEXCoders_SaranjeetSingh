@@ -1,47 +1,53 @@
-import numpy as np
 import torch
 import torch.nn as nn
+import torchvision.transforms as transforms
+from PIL import Image
+import torchvision.models as models
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-class BinaryCNN(nn.Module):
+
+# 🔥 MODEL (same as training)
+class BinaryModel(nn.Module):
     def __init__(self):
         super().__init__()
-        # 🔥 MUST MATCH TRAINING EXACTLY
-        self.features = nn.Sequential(
-            nn.Conv2d(1, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
 
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
+        self.model = models.resnet18(weights=None)
 
-            nn.AdaptiveAvgPool2d(1)
+        self.model.conv1 = nn.Conv2d(
+            1, 64, kernel_size=7, stride=2, padding=3, bias=False
         )
-        self.classifier = nn.Linear(64, 1)
+
+        self.model.fc = nn.Linear(512, 1)
 
     def forward(self, x):
-        feats = self.features(x)
-        feats = feats.view(feats.size(0), -1)
-        subject_feat = feats.mean(dim=0)
-        return self.classifier(subject_feat)
+        return self.model(x)
+
 
 def load_binary_model(path):
-    model = BinaryCNN().to(DEVICE)
+    model = BinaryModel().to(DEVICE)
     model.load_state_dict(torch.load(path, map_location=DEVICE))
     model.eval()
     return model
 
-def predict_binary(model, volume):
-    volume = (volume - volume.mean()) / (volume.std() + 1e-6)
-    x = torch.tensor(volume.transpose(2, 0, 1)).float().unsqueeze(1).to(DEVICE)
+
+# 🔥 TRANSFORM (IMPORTANT — SAME AS TRAINING)
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.Grayscale(1),
+    transforms.ToTensor(),
+    transforms.Normalize([0.5], [0.5])
+])
+
+
+def predict_binary(model, image):
+    img = Image.open(image)
+    img = transform(img).unsqueeze(0).to(DEVICE)
 
     with torch.no_grad():
-        prob = torch.sigmoid(model(x)).item()
+        prob = torch.sigmoid(model(img)).item()
 
     return {
-        "label": "AD" if prob >= 0.5 else "CN",
+        "label": "AD" if prob > 0.5 else "CN",
         "confidence": float(round(prob, 4))
     }
-

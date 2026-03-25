@@ -1,65 +1,51 @@
-import numpy as np
 import torch
 import torch.nn as nn
+import torchvision.transforms as transforms
+from PIL import Image
+import torchvision.models as models
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
 CLASSES = ["CN", "MCI", "AD"]
 
-class SubjectCNN(nn.Module):
+
+class MRIModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.encoder = nn.Sequential(
-            nn.Conv2d(1, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
 
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
+        self.model = models.resnet18(weights=None)
 
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.ReLU(),
-
-            nn.AdaptiveAvgPool2d(1)
+        self.model.conv1 = nn.Conv2d(
+            1, 64, kernel_size=7, stride=2, padding=3, bias=False
         )
 
-        # 🔥 REQUIRED — because checkpoint has attn.*
-        self.attn = nn.Sequential(
-            nn.Linear(128, 64),
-            nn.Tanh(),
-            nn.Linear(64, 1)
-        )
-
-        self.classifier = nn.Sequential(
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(64, 3)
-        )
+        self.model.fc = nn.Linear(512, 3)
 
     def forward(self, x):
-        feats = self.encoder(x).view(x.size(0), -1)   # (S,128)
-
-        attn_scores = self.attn(feats)                # (S,1)
-        attn_weights = torch.softmax(attn_scores, dim=0)
-
-        subject_feat = (feats * attn_weights).sum(dim=0)
-
-        return self.classifier(subject_feat)
+        return self.model(x)
 
 
 def load_multiclass_model(path):
-    model = SubjectCNN().to(DEVICE)
+    model = MRIModel().to(DEVICE)
     model.load_state_dict(torch.load(path, map_location=DEVICE))
     model.eval()
     return model
 
-def predict_multiclass(model, volume):
-    volume = (volume - volume.mean()) / (volume.std() + 1e-6)
-    x = torch.tensor(volume.transpose(2, 0, 1)).float().unsqueeze(1).to(DEVICE)
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.Grayscale(1),
+    transforms.ToTensor(),
+    transforms.Normalize([0.5], [0.5])
+])
+
+
+def predict_multiclass(model, image):
+    img = Image.open(image)
+    img = transform(img).unsqueeze(0).to(DEVICE)
 
     with torch.no_grad():
-        probs = torch.softmax(model(x), dim=0).cpu().numpy()
+        probs = torch.softmax(model(img), dim=1)[0].cpu().numpy()
 
     return {
         "label": CLASSES[int(probs.argmax())],
@@ -69,5 +55,3 @@ def predict_multiclass(model, volume):
             "AD": float(round(probs[2], 4)),
         }
     }
-
-

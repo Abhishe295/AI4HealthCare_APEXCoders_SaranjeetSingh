@@ -27,11 +27,11 @@ export default function UploadCard({ title, endpoint }) {
     if (!selectedFile) return;
     
     // Validate file type
-    if (!selectedFile.name.endsWith('.npy')) {
-      setError("Please upload a .npy file");
-      setFile(null);
-      return;
-    }
+    if (!selectedFile.type.startsWith("image/")) {
+  setError("Please upload an image file (jpg/png)");
+  setFile(null);
+  return;
+}
 
     setFile(selectedFile);
     setError(null);
@@ -263,8 +263,8 @@ export default function UploadCard({ title, endpoint }) {
         
         <p className="text-sm text-base-content/60 mb-4">
           {isBinary 
-            ? "Upload a brain MRI scan (.npy format) to detect tumors"
-            : "Upload a brain MRI scan (.npy format) to classify cognitive state"
+            ? "Upload a brain MRI scan (.jpg/.png format) to detect tumors"
+            : "Upload a brain MRI scan (.jpg/.png format) to classify cognitive state"
           }
         </p>
 
@@ -284,7 +284,7 @@ export default function UploadCard({ title, endpoint }) {
             <label className="cursor-pointer">
               <input
                 type="file"
-                accept=".npy"
+                accept="image/*"
                 className="hidden"
                 onChange={(e) => handleFileChange(e.target.files[0])}
               />
@@ -295,10 +295,10 @@ export default function UploadCard({ title, endpoint }) {
                   </div>
                 </div>
                 <div>
-                  <p className="font-semibold">Drop your .npy file here</p>
+                  <p className="font-semibold">Drop your .jpg/.png file here</p>
                   <p className="text-sm text-base-content/60 mt-1">or click to browse</p>
                 </div>
-                <div className="badge badge-outline badge-sm">Only .npy files</div>
+                <div className="badge badge-outline badge-sm">Only .jpg/.png files</div>
               </div>
             </label>
           ) : (
